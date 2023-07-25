@@ -24,3 +24,24 @@ def smokers_region_statistics():
     # conn.commit
     cursor.close()
     conn.close()
+
+
+def region_obesity_stat():
+    conn = connect(**snowflake_conn)
+    cursor = conn.cursor()
+    
+    # Drop the max_ratings table if it already exists
+    cursor.execute("DROP TABLE IF EXISTS region_obesity")
+    
+    # Create the max_ratings table
+    cursor.execute("""
+        CREATE TABLE region_obesity (
+            region STRING,
+            sex string,
+            avg_obesity float     
+            
+        )
+    """)
+    # conn.commit
+    cursor.close()
+    conn.close()

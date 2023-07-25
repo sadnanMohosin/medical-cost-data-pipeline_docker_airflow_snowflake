@@ -21,3 +21,20 @@ def load_smokers_statistics():
         group by region;""")
     cursor.close()
     connection.close()
+
+
+def load_region_obesity_stat():
+    connection = connect(**snowflake_conn)
+    cursor = connection.cursor()
+    cursor.execute("TRUNCATE TABLE region_obesity;")
+
+    # statistics about smokers depending on the region
+    cursor.execute("""
+        INSERT INTO region_obesity
+        select region,sex, avg(bmi)
+        from structured_data
+        where bmi > 30
+        group by 1,2
+        order by region;""")
+    cursor.close()
+    connection.close()
