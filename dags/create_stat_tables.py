@@ -1,47 +1,34 @@
 from datetime import datetime
 from airflow import DAG
 from airflow.operators.python_operator import PythonOperator
-from airflow.models import Variable
-from snowflake.connector import connect
+from snowflake.connector import connect, Error
 from snowflake_connection import snowflake_conn
 
+def create_table(table_name, table_columns):
+    try:
+        # Connect to Snowflake
+        conn = connect(**snowflake_conn)
+        cursor = conn.cursor()
 
-def smokers_region_statistics():
-    conn = connect(**snowflake_conn)
-    cursor = conn.cursor()
-    
-    # Drop the max_ratings table if it already exists
-    cursor.execute("DROP TABLE IF EXISTS smokers_region_statistics")
-    
-    # Create the max_ratings table
-    cursor.execute("""
-        CREATE TABLE smokers_region_statistics (
-            region STRING,
-            smoker_percent FLOAT     
-            
-        )
-    """)
-    # conn.commit
-    cursor.close()
-    conn.close()
+        # Drop the table if it already exists
+        cursor.execute(f"DROP TABLE IF EXISTS {table_name}")
 
+        # Create the table
+        create_table_query = f"""
+            CREATE TABLE {table_name} (
+                {table_columns}
+            )
+        """
+        cursor.execute(create_table_query)
 
-def region_obesity_stat():
-    conn = connect(**snowflake_conn)
-    cursor = conn.cursor()
-    
-    # Drop the max_ratings table if it already exists
-    cursor.execute("DROP TABLE IF EXISTS region_obesity")
-    
-    # Create the max_ratings table
-    cursor.execute("""
-        CREATE TABLE region_obesity (
-            region STRING,
-            sex string,
-            avg_obesity float     
-            
-        )
-    """)
-    # conn.commit
-    cursor.close()
-    conn.close()
+        # Commit the changes
+        conn.commit()
+        print(f"Table '{table_name}' successfully created.")
+
+    except Error as e:
+        print("Error: ", e)
+
+    finally:
+        # Close the cursor and connection
+        cursor.close()
+        conn.close()
